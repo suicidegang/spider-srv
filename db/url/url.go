@@ -37,6 +37,10 @@ func (u Url) FullURL() string {
 	return url
 }
 
+func (u Url) Hash() string {
+	return HashMD5(u.FullURL())
+}
+
 func (u Url) Document(r *redis.Client) (doc *goquery.Document, err error) {
 	doc, err = Document(r, u.FullURL())
 	return

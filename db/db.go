@@ -34,7 +34,7 @@ func Init() {
 
 	Db.AutoMigrate(&sitemap.Sitemap{}, &url.Url{}, &selector.Selector{})
 	Db.Model(&url.Url{}).AddUniqueIndex("idx_url_params", "url", "query_params")
-	Db.LogMode(true)
+	Db.LogMode(false)
 
 	options, err := redis.ParseURL(RedisUrl)
 	if err != nil {

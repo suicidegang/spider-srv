@@ -28,6 +28,7 @@ func (sitemap Sitemap) Create(db *gorm.DB, r *redis.Client, pool *tunny.WorkPool
 		return sitemap, err
 	}
 
+	urls := map[string]int{}
 	var scraper func(string, uint64) func()
 
 	scraper = func(urlStr string, depth uint64) func() {
@@ -38,6 +39,14 @@ func (sitemap Sitemap) Create(db *gorm.DB, r *redis.Client, pool *tunny.WorkPool
 				return
 			}
 
+			hash := ourl.Hash()
+
+			if _, exists := urls[hash]; exists {
+				log.Printf("[skip] %v:%v", hash, ourl.FullURL())
+				return
+			}
+
+			urls[hash] = 1
 			log.Printf("[url] %+v", ourl)
 
 			if depth+1 > sitemap.Depth {

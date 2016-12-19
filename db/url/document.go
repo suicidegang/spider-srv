@@ -16,10 +16,15 @@ const (
 	DocumentNS string = "documentUrl:"
 )
 
-func Document(r *redis.Client, urlStr string) (*goquery.Document, error) {
+func HashMD5(s string) string {
 	hasher := md5.New()
-	hasher.Write([]byte(urlStr))
-	hash := hex.EncodeToString(hasher.Sum(nil))
+	hasher.Write([]byte(s))
+
+	return hex.EncodeToString(hasher.Sum(nil))
+}
+
+func Document(r *redis.Client, urlStr string) (*goquery.Document, error) {
+	hash := HashMD5(urlStr)
 	key := DocumentNS + hash
 
 	var doc *goquery.Document
