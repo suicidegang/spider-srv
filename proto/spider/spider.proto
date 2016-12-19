@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+service Spider {
+	rpc TrackSitemap(TrackSitemapRequest) returns (TrackSitemapResponse) {}
+	// rpc Update(UpdateRequest) returns (UpdateResponse) {}
+	// rpc Delete(DeleteRequest) returns (DeleteResponse) {}
+	// rpc UpdatePassword(UpdatePasswordRequest) returns (UpdatePasswordResponse) {}
+	// rpc Login(LoginRequest) returns (LoginResponse) {}
+	// rpc Logout(LogoutRequest) returns (LogoutResponse) {}
+	// rpc ReadSession(ReadSessionRequest) returns(ReadSessionResponse) {}
+}
+
+message TrackSitemapRequest {
+	string from = 1;
+	uint64 depth = 2;
+	map<string, string> patterns = 3;
+	string name = 4;
+}
+
+message TrackSitemapResponse {
+	uint64 id = 1;
+}
