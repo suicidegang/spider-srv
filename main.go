@@ -39,7 +39,7 @@ func main() {
 		micro.BeforeStart(func() error {
 			log.Printf("[sg.micro.srv.spider] Starting service...")
 
-			pool, err := tunny.CreatePoolGeneric(5).Open()
+			pool, err := tunny.CreatePoolGeneric(3).Open()
 			if err != nil {
 				log.Fatal(err)
 			}

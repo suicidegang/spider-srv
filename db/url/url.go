@@ -22,6 +22,7 @@ type Url struct {
 	Title       string
 	Description string `gorm:"type:text"`
 	Meta        string `sql:"type:JSONB NOT NULL DEFAULT '{}'::JSONB"`
+	Group       string
 
 	LastModified *time.Time `gorm:"null"`
 	Expires      *time.Time `gorm:"null"`
@@ -46,7 +47,7 @@ func (u Url) Document(r *redis.Client) (doc *goquery.Document, err error) {
 	return
 }
 
-func Prepare(db *gorm.DB, r *redis.Client, urlStr string, sitemapID uint) (Url, error) {
+func Prepare(db *gorm.DB, r *redis.Client, urlStr, group string, sitemapID uint) (Url, error) {
 	if len(urlStr) < 8 {
 		log.Printf("[err] Url::prepare could not parse url: %v", urlStr)
 		return Url{}, errors.New("Invalid url")
@@ -85,6 +86,7 @@ func Prepare(db *gorm.DB, r *redis.Client, urlStr string, sitemapID uint) (Url, 
 			Title:       title,
 			Description: description,
 			Meta:        "{}",
+			Group:       group,
 		}
 
 		db.Create(&ourl)
@@ -93,4 +95,24 @@ func Prepare(db *gorm.DB, r *redis.Client, urlStr string, sitemapID uint) (Url, 
 	}
 
 	return ourl, nil
+}
+
+func One(db *gorm.DB, id uint64) (Url, error) {
+	ourl := Url{}
+
+	if db.First(&ourl, id).RecordNotFound() {
+		return ourl, errors.New("URL not found.")
+	}
+
+	return ourl, nil
+}
+
+func FixRelative(relative, absolute string) string {
+	u, err := url.Parse(absolute)
+	if err != nil {
+		log.Printf("[err] Url::prepare could not parse url: %v", err.Error())
+		return relative
+	}
+
+	return u.Scheme + "://" + u.Host + relative
 }

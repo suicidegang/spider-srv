@@ -7,7 +7,9 @@ import (
 	"github.com/suicidegang/spider-srv/db/url"
 	"gopkg.in/redis.v5"
 
+	"encoding/json"
 	"log"
+	"regexp"
 )
 
 type Sitemap struct {
@@ -29,43 +31,74 @@ func (sitemap Sitemap) Create(db *gorm.DB, r *redis.Client, pool *tunny.WorkPool
 	}
 
 	urls := map[string]int{}
+	patterns := map[string]*regexp.Regexp{}
+
+	var groups map[string]string
 	var scraper func(string, uint64) func()
+
+	if err := json.Unmarshal([]byte(sitemap.Patterns), &groups); err != nil {
+		return sitemap, err
+	}
+
+	// Compile regexp patterns received as strings
+	for group, pattern := range groups {
+		r, err := regexp.Compile(pattern)
+
+		if err != nil {
+			return sitemap, err
+		}
+
+		patterns[group] = r
+	}
 
 	scraper = func(urlStr string, depth uint64) func() {
 		return func() {
-			ourl, err := url.Prepare(db, r, urlStr, sitemap.ID)
-			if err != nil {
-				log.Printf("[err] %v/%v: %v", urlStr, depth, err)
-				return
-			}
+			// Iterate over patterns to see if any of them matches the url
+			for group, pattern := range patterns {
+				if pattern.MatchString(urlStr) {
+					ourl, err := url.Prepare(db, r, urlStr, group, sitemap.ID)
+					if err != nil {
+						log.Printf("[err] %v/%v: %v", urlStr, depth, err)
+						return
+					}
 
-			hash := ourl.Hash()
+					hash := ourl.Hash()
+					if _, exists := urls[hash]; exists {
+						log.Printf("[skip] %v:%v", hash, ourl.FullURL())
+						return
+					}
 
-			if _, exists := urls[hash]; exists {
-				log.Printf("[skip] %v:%v", hash, ourl.FullURL())
-				return
-			}
+					// Keep map of hashes for further O(1) checks
+					urls[hash] = 1
+					log.Printf("[url] %+v", ourl)
+					if depth+1 > sitemap.Depth {
+						return
+					}
 
-			urls[hash] = 1
-			log.Printf("[url] %+v", ourl)
+					// Retrieve URL's queriable document
+					doc, err := ourl.Document(r)
+					if err != nil {
+						log.Printf("[err] %v/%v: %v", urlStr, depth, err)
+						return
+					}
 
-			if depth+1 > sitemap.Depth {
-				return
-			}
+					doc.Find("a[href]").Each(func(i int, s *goquery.Selection) {
+						link, exists := s.Attr("href")
 
-			doc, err := ourl.Document(r)
-			if err != nil {
-				log.Printf("[err] %v/%v: %v", urlStr, depth, err)
-				return
-			}
+						if exists && len(link) > 1 {
 
-			doc.Find("a[href]").Each(func(i int, s *goquery.Selection) {
-				link, exists := s.Attr("href")
+							// Relative path should be prefixed with base url
+							if link[0:1] == "/" {
+								link = url.FixRelative(link, urlStr)
+							}
 
-				if exists && len(link) > 0 {
-					pool.SendWorkAsync(scraper(link, depth+1), func(data interface{}, err error) {})
+							pool.SendWorkAsync(scraper(link, depth+1), func(data interface{}, err error) {})
+						}
+					})
+
+					break
 				}
-			})
+			}
 		}
 	}
 
