@@ -3,10 +3,10 @@ package main
 import (
 	"log"
 
-	"github.com/jeffail/tunny"
 	"github.com/micro/cli"
 	"github.com/micro/go-micro"
 	"github.com/suicidegang/spider-srv/db"
+	"github.com/suicidegang/spider-srv/db/sitemap"
 	"github.com/suicidegang/spider-srv/handler"
 	proto "github.com/suicidegang/spider-srv/proto/spider"
 )
@@ -39,17 +39,8 @@ func main() {
 		micro.BeforeStart(func() error {
 			log.Printf("[sg.micro.srv.spider] Starting service...")
 
-			pool, err := tunny.CreatePoolGeneric(3).Open()
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			handler.Pool = pool
-			return nil
-		}),
-		micro.AfterStop(func() error {
-			handler.Pool.Close()
-
+			// Start the work queue dispatcher
+			sitemap.Dispatcher(4)
 			return nil
 		}),
 	)

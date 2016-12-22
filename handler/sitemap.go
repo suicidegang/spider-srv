@@ -27,7 +27,7 @@ func (srv *Spider) TrackSitemap(ctx context.Context, req *proto.TrackSitemapRequ
 		Patterns: string(patterns),
 	}
 
-	smap, err = smap.Create(db.Db, db.Redis, Pool)
+	smap, err = smap.Create(db.Db, db.Redis)
 	if err != nil {
 		return errors.InternalServerError("sg.micro.srv.spider.TrackSitemap", err.Error())
 	}

@@ -1,0 +1,49 @@
+package sitemap
+
+import (
+	"log"
+)
+
+type Worker struct {
+	ID       int
+	Work     chan SitemapRequest
+	Queue    chan chan SitemapRequest
+	QuitChan chan bool
+}
+
+func (worker *Worker) Start() {
+	go func() {
+		log.Printf("Starting worker %v", worker.ID)
+
+		for {
+			// Add the worker into workers queue
+			worker.Queue <- worker.Work
+
+			select {
+			case work := <-worker.Work:
+				log.Printf("Received work request for %v in %v depth", work.Url, work.Depth)
+				work.Work()
+
+			case <-worker.QuitChan:
+				log.Printf("worker %v stopping", worker.ID)
+			}
+		}
+	}()
+}
+
+func (worker *Worker) Stop() {
+	go func() {
+		worker.QuitChan <- true
+	}()
+}
+
+func NewWorker(id int, queue chan chan SitemapRequest) Worker {
+	w := Worker{
+		ID:       id,
+		Work:     make(chan SitemapRequest),
+		Queue:    queue,
+		QuitChan: make(chan bool),
+	}
+
+	return w
+}
