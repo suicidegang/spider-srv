@@ -9,6 +9,8 @@ import (
 	"github.com/suicidegang/spider-srv/db/sitemap"
 	"github.com/suicidegang/spider-srv/handler"
 	proto "github.com/suicidegang/spider-srv/proto/spider"
+	"net/http"
+	_ "net/http/pprof"
 )
 
 func main() {
@@ -41,6 +43,11 @@ func main() {
 
 			// Start the work queue dispatcher
 			sitemap.Dispatcher(4)
+
+			go func() {
+				log.Println(http.ListenAndServe("localhost:6060", nil))
+			}()
+
 			return nil
 		}),
 	)

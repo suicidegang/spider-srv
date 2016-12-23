@@ -5,6 +5,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/suicidegang/spider-srv/db/dataset"
 	"github.com/suicidegang/spider-srv/db/selector"
 	"github.com/suicidegang/spider-srv/db/sitemap"
 	"github.com/suicidegang/spider-srv/db/url"
@@ -32,7 +33,7 @@ func Init() {
 		log.Fatal(err)
 	}
 
-	Db.AutoMigrate(&sitemap.Sitemap{}, &url.Url{}, &selector.Selector{})
+	Db.AutoMigrate(&sitemap.Sitemap{}, &url.Url{}, &selector.Selector{}, &dataset.Dataset{})
 	Db.Model(&url.Url{}).AddUniqueIndex("idx_url_params", "url", "query_params")
 	Db.LogMode(false)
 
