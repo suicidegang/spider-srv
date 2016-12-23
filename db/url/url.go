@@ -47,6 +47,24 @@ func (u Url) Document(r *redis.Client) (doc *goquery.Document, err error) {
 	return
 }
 
+type Urls []Url
+
+func (u Urls) Each(fn func(u Url)) {
+	if len(u) > 0 {
+		for _, one := range u {
+			fn(one)
+		}
+	}
+}
+
+func All(db *gorm.DB) Urls {
+	var list Urls
+
+	db.Find(&list)
+
+	return list
+}
+
 func Prepare(db *gorm.DB, r *redis.Client, urlStr, group string, sitemapID uint) (Url, error) {
 	if len(urlStr) < 8 {
 		log.Printf("[err] Url::prepare could not parse url: %v", urlStr)

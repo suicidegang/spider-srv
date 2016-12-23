@@ -3,6 +3,7 @@ syntax = "proto3";
 service Spider {
 	rpc TrackSitemap(TrackSitemapRequest) returns (TrackSitemapResponse) {}
 	rpc FetchDataset(FetchDatasetRequest) returns (FetchDatasetResponse) {}
+	rpc PrepareDatasets(PrepareDatasetsRequest) returns (PrepareDatasetsResponse) {} 
 	// rpc Update(UpdateRequest) returns (UpdateResponse) {}
 	// rpc Delete(DeleteRequest) returns (DeleteResponse) {}
 	// rpc UpdatePassword(UpdatePasswordRequest) returns (UpdatePasswordResponse) {}
@@ -29,4 +30,14 @@ message TrackSitemapRequest {
 
 message TrackSitemapResponse {
 	uint64 id = 1;
+}
+
+message PrepareDatasetsRequest {
+	uint64 selector_id = 1;
+	string group = 2;
+	map<string, string> conditions = 3;
+}
+
+message PrepareDatasetsResponse {
+	uint64 count = 1;
 }
