@@ -7,6 +7,7 @@ import (
 	"gopkg.in/redis.v5"
 
 	"encoding/json"
+	"errors"
 )
 
 const HEALTHY_STATUS = "healthy"
@@ -24,6 +25,7 @@ type Dataset struct {
 	Status     string
 	Data       string `sql:"type:JSONB NOT NULL DEFAULT '{}'::JSONB"`
 	Revision   uint
+	Hits       uint
 }
 
 func (dataset Dataset) Document() (map[string]string, error) {
@@ -35,6 +37,49 @@ func (dataset Dataset) Document() (map[string]string, error) {
 	}
 
 	return d, nil
+}
+
+func (dataset Dataset) Invalidate(db *gorm.DB, r *redis.Client) (Dataset, error) {
+	var (
+		u url.Url
+		s selector.Selector
+	)
+
+	if db.Model(&dataset).Related(&u).RecordNotFound() {
+		return dataset, errors.New("Dataset url not found.")
+	}
+
+	if db.Model(&dataset).Related(&s).RecordNotFound() {
+		return dataset, errors.New("Selector not found.")
+	}
+
+	doc, err := u.Document(r)
+	if err != nil {
+		return dataset, err
+	}
+
+	dset, err := s.Query(doc)
+	if err != nil {
+		return dataset, err
+	}
+
+	data, err := json.Marshal(dset)
+	if err != nil {
+		return dataset, err
+	}
+
+	ds := Dataset{
+		SelectorID: dataset.SelectorID,
+		UrlID:      dataset.UrlID,
+		Hash:       HashMapMD5(dset),
+		Data:       string(data),
+		Status:     HEALTHY_STATUS,
+		Revision:   dataset.Revision + 1,
+		Hits:       0,
+	}
+
+	db.Create(&ds)
+	return ds, nil
 }
 
 func Prepare(db *gorm.DB, r *redis.Client, selectorID, urlID uint) (Dataset, error) {
@@ -73,11 +118,22 @@ func Prepare(db *gorm.DB, r *redis.Client, selectorID, urlID uint) (Dataset, err
 			Data:       string(data),
 			Status:     HEALTHY_STATUS,
 			Revision:   1,
+			Hits:       1,
 		}
 
 		db.Create(&ds)
 		return ds, nil
 	}
+
+	if s.UpdatedAt.After(ds.UpdatedAt) || u.UpdatedAt.After(ds.UpdatedAt) {
+		ds, err = ds.Invalidate(db, r)
+
+		if err != nil {
+			return ds, err
+		}
+	}
+
+	db.Model(&ds).Update("hits", gorm.Expr("hits + 1"))
 
 	return ds, nil
 }
