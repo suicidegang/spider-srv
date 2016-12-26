@@ -35,7 +35,7 @@ message TrackSitemapResponse {
 message PrepareDatasetsRequest {
 	uint64 selector_id = 1;
 	string group = 2;
-	map<string, string> conditions = 3;
+	repeated string conditions = 3;
 }
 
 message PrepareDatasetsResponse {

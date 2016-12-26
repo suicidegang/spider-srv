@@ -1,0 +1,10 @@
+{
+	"name": {"use": "text", "value": "h1", "filters": ["trim-space"]},
+	"supplier": {"use": "text", "value": ".supplier-details > span", "filters": ["trim-space"]},
+	"plan_price": {"use": "text", "i": 2, "value": "#product table tbody tr td", "filters": ["trim-space"]},
+	"smartphone": {"use": "text", "i": 3, "value": "#product table tbody tr td", "filters": ["trim-space"]},
+	"smartphone_price": {"use": "text", "i": 4, "value": "#product table tbody tr td", "filters": ["trim-space"]},
+	"minutes": {"use": "text", "i": 6, "value": "#product table tbody tr td", "filters": ["trim-space"]},
+	"internet": {"use": "text", "i": 9, "value": "#product table tbody tr td", "filters": ["trim-space"]},
+	"minutes": {"use": "text", "i": 12, "value": "#product table tbody tr td", "filters": ["trim-space"]}
+}

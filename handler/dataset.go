@@ -30,7 +30,20 @@ func (srv *Spider) FetchDataset(ctx context.Context, req *proto.FetchDatasetRequ
 func (srv *Spider) PrepareDatasets(ct context.Context, req *proto.PrepareDatasetsRequest, res *proto.PrepareDatasetsResponse) error {
 	log.Printf("Spider::prepareDatasets %+v", req)
 
-	urls := url.All(db.Db.Where("\"group\" = ?", req.Group))
+	query := db.Db.Where("\"group\" = ?", req.Group)
+
+	// Apply query conditions if any
+	if len(req.Conditions) > 0 {
+		statement, binds := req.Conditions[0], req.Conditions[1:]
+		bind := make([]interface{}, len(binds))
+		for i, v := range binds {
+			bind[i] = v
+		}
+
+		query = query.Where(statement, bind...)
+	}
+
+	urls := url.All(query)
 	urls.Each(func(u url.Url) {
 		job := dataset.PrepareJob{UrlID: u.ID, SelectorID: uint(req.SelectorId), DB: db.Db, R: db.Redis}
 
