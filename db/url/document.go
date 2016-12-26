@@ -2,6 +2,7 @@ package url
 
 import (
 	"github.com/PuerkitoBio/goquery"
+	"github.com/pquerna/cachecontrol"
 	"gopkg.in/redis.v5"
 
 	"crypto/md5"
@@ -10,6 +11,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 )
 
 const (
@@ -30,7 +32,13 @@ func Document(r *redis.Client, urlStr string) (*goquery.Document, error) {
 	var doc *goquery.Document
 
 	if !r.Exists(key).Val() {
-		res, err := http.Get(urlStr)
+
+		req, err := http.NewRequest("GET", urlStr, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		res, err := http.DefaultClient.Do(req)
 		if err != nil {
 			return nil, err
 		}
@@ -44,12 +52,23 @@ func Document(r *redis.Client, urlStr string) (*goquery.Document, error) {
 			return nil, err
 		}
 
+		reasons, expires, _ := cachecontrol.CachableResponse(req, res, cachecontrol.Options{})
+		expiration := 900
+
+		if len(reasons) == 0 {
+			t := expires.Unix() - time.Now().Unix()
+
+			if t > 0 {
+				expiration = int(t)
+			}
+		}
+
 		doc, err = goquery.NewDocumentFromResponse(res)
 		if err != nil {
 			return nil, err
 		}
 
-		err = r.Set(key, string(body), 0).Err()
+		err = r.Set(key, string(body), time.Second*time.Duration(int(expiration))).Err()
 		if err != nil {
 			return nil, err
 		}
