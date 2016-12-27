@@ -47,13 +47,15 @@ func Document(r *redis.Client, urlStr string) (*goquery.Document, error) {
 			return nil, errors.New("Invalid response from remote document. Aborting.")
 		}
 
+		defer res.Body.Close()
+
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			return nil, err
 		}
 
 		reasons, expires, _ := cachecontrol.CachableResponse(req, res, cachecontrol.Options{})
-		expiration := 900
+		expiration := 43200
 
 		if len(reasons) == 0 {
 			t := expires.Unix() - time.Now().Unix()
@@ -63,7 +65,11 @@ func Document(r *redis.Client, urlStr string) (*goquery.Document, error) {
 			}
 		}
 
-		doc, err = goquery.NewDocumentFromResponse(res)
+		if expiration < 43200 {
+			expiration = 43200
+		}
+
+		doc, err = goquery.NewDocumentFromReader(res.Body)
 		if err != nil {
 			return nil, err
 		}
