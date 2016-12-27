@@ -47,8 +47,6 @@ func Document(r *redis.Client, urlStr string) (*goquery.Document, error) {
 			return nil, errors.New("Invalid response from remote document. Aborting.")
 		}
 
-		defer res.Body.Close()
-
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			return nil, err
