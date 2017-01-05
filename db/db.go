@@ -8,6 +8,7 @@ import (
 	"github.com/suicidegang/spider-srv/db/dataset"
 	"github.com/suicidegang/spider-srv/db/selector"
 	"github.com/suicidegang/spider-srv/db/sitemap"
+	"github.com/suicidegang/spider-srv/db/snippets"
 	"github.com/suicidegang/spider-srv/db/url"
 	"gopkg.in/redis.v5"
 	//"github.com/micro/go-micro/errors"
@@ -35,6 +36,11 @@ func Init() {
 
 	Db.AutoMigrate(&sitemap.Sitemap{}, &url.Url{}, &selector.Selector{}, &dataset.Dataset{})
 	Db.Model(&url.Url{}).AddUniqueIndex("idx_url_params", "url", "query_params")
+
+	// URLs table will need some special queries executed to prepare env.
+	Db.Exec(snippets.PostgresSearchCleanup)
+	Db.Exec(snippets.PostgresSearchIndexCreate)
+	Db.Exec(snippets.PostgresSearchIndexCreateFullText)
 	Db.LogMode(false)
 
 	options, err := redis.ParseURL(RedisUrl)
