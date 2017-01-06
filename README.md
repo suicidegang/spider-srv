@@ -67,7 +67,7 @@ $ micro query sg.micro.srv.spider Spider.PrepareDatasets '{
 
 ### Spider.FetchPages
 ```shell
-$ micro query sg.micro.srv.spider Spider.PrepareDatasets '{
+$ micro query sg.micro.srv.spider Spider.FetchPages '{
     "search": "vas a volar iphone 6",
     "group": "plan"
 }'
