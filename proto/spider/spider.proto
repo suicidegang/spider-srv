@@ -4,12 +4,21 @@ service Spider {
 	rpc TrackSitemap(TrackSitemapRequest) returns (TrackSitemapResponse) {}
 	rpc FetchDataset(FetchDatasetRequest) returns (FetchDatasetResponse) {}
 	rpc PrepareDatasets(PrepareDatasetsRequest) returns (PrepareDatasetsResponse) {} 
+	rpc FetchPages(FetchPagesRequest) returns (FetchPagesResponse) {}
 	// rpc Update(UpdateRequest) returns (UpdateResponse) {}
 	// rpc Delete(DeleteRequest) returns (DeleteResponse) {}
 	// rpc UpdatePassword(UpdatePasswordRequest) returns (UpdatePasswordResponse) {}
 	// rpc Login(LoginRequest) returns (LoginResponse) {}
 	// rpc Logout(LogoutRequest) returns (LogoutResponse) {}
 	// rpc ReadSession(ReadSessionRequest) returns(ReadSessionResponse) {}
+}
+
+message Url {
+	uint64 id = 1;
+	string url = 2;
+	string title = 3;
+	string group = 4;
+	uint64 sitemap_id = 5;
 }
 
 message FetchDatasetRequest {
@@ -40,4 +49,13 @@ message PrepareDatasetsRequest {
 
 message PrepareDatasetsResponse {
 	uint64 count = 1;
+}
+
+message FetchPagesRequest {
+	string search = 1;
+	string group = 2;
+}
+
+message FetchPagesResponse {
+	repeated Url results = 1;
 }

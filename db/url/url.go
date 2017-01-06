@@ -65,6 +65,19 @@ func All(db *gorm.DB) Urls {
 	return list
 }
 
+func FindFullText(db *gorm.DB, search string) Urls {
+	query := db.Table("spider_urls_index uix")
+	query = query.Select("u.*, ts_rank(document, plainto_tsquery('es', ?)) AS score", search)
+	query = query.Joins("inner join spider_urls u ON u.id = uix.id")
+	query = query.Where("document @@ plainto_tsquery('es', ?)", search)
+	query = query.Order("score DESC")
+
+	var urls Urls
+	query.Scan(&urls)
+
+	return urls
+}
+
 func Prepare(db *gorm.DB, r *redis.Client, urlStr, group string, sitemapID uint) (Url, error) {
 	if len(urlStr) < 8 {
 		log.Printf("[err] Url::prepare could not parse url: %v", urlStr)

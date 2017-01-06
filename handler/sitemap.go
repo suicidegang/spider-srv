@@ -4,6 +4,7 @@ import (
 	"github.com/micro/go-micro/errors"
 	"github.com/suicidegang/spider-srv/db"
 	"github.com/suicidegang/spider-srv/db/sitemap"
+	"github.com/suicidegang/spider-srv/db/url"
 	proto "github.com/suicidegang/spider-srv/proto/spider"
 	"golang.org/x/net/context"
 
@@ -33,6 +34,28 @@ func (srv *Spider) TrackSitemap(ctx context.Context, req *proto.TrackSitemapRequ
 	}
 
 	res.Id = uint64(smap.ID)
+
+	return nil
+}
+
+func (srv *Spider) FetchPages(ctx context.Context, req *proto.FetchPagesRequest, res *proto.FetchPagesResponse) error {
+
+	log.Printf("Spider::fetchPages %+v", req)
+
+	urls := url.FindFullText(db.Db, req.Search)
+	results := make([]*proto.Url, len(urls))
+
+	for i, u := range urls {
+		results[i] = &proto.Url{
+			Id:        uint64(u.ID),
+			Url:       u.FullURL(),
+			Title:     u.Title,
+			Group:     u.Group,
+			SitemapId: uint64(u.SitemapID.Int64),
+		}
+	}
+
+	res.Results = results
 
 	return nil
 }
