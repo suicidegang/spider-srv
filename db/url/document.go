@@ -70,23 +70,17 @@ func Document(r *redis.Client, urlStr string) (*goquery.Document, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
 
-		doc, err = goquery.NewDocumentFromReader(res.Body)
-		if err != nil {
-			return nil, err
-		}
+	body, err := r.Get(key).Result()
+	if err != nil {
+		return nil, err
+	}
 
-	} else {
-		body, err := r.Get(key).Result()
-		if err != nil {
-			return nil, err
-		}
-
-		reader := strings.NewReader(body)
-		doc, err = goquery.NewDocumentFromReader(reader)
-		if err != nil {
-			return nil, err
-		}
+	reader := strings.NewReader(body)
+	doc, err = goquery.NewDocumentFromReader(reader)
+	if err != nil {
+		return nil, err
 	}
 
 	return doc, nil
