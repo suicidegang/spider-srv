@@ -53,7 +53,7 @@ func (req SitemapRequest) Work() {
 			// Keep map of hashes for further O(1) checks
 			SitemapTable.Set(hash, 1)
 			log.Printf("[url] %+v", ourl)
-			if uint64(req.SitemapID+1) > req.FinalDepth {
+			if uint64(req.Depth+1) > req.FinalDepth {
 				return
 			}
 
