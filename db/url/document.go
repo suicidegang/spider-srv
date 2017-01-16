@@ -32,7 +32,6 @@ func Document(r *redis.Client, urlStr string) (*goquery.Document, error) {
 	var doc *goquery.Document
 
 	if !r.Exists(key).Val() {
-
 		req, err := http.NewRequest("GET", urlStr, nil)
 		if err != nil {
 			return nil, err
@@ -67,15 +66,16 @@ func Document(r *redis.Client, urlStr string) (*goquery.Document, error) {
 			expiration = 43200
 		}
 
+		err = r.Set(key, string(body), time.Second*time.Duration(int(expiration))).Err()
+		if err != nil {
+			return nil, err
+		}
+
 		doc, err = goquery.NewDocumentFromReader(res.Body)
 		if err != nil {
 			return nil, err
 		}
 
-		err = r.Set(key, string(body), time.Second*time.Duration(int(expiration))).Err()
-		if err != nil {
-			return nil, err
-		}
 	} else {
 		body, err := r.Get(key).Result()
 		if err != nil {
