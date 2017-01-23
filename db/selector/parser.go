@@ -39,6 +39,13 @@ func (pm *ParsersMap) UnmarshalJSON(data []byte) error {
 					return err
 				}
 				pfields[k] = t
+			case ATTR_PARSER:
+				t := AttrParser{}
+				err := json.Unmarshal(v, &t)
+				if err != nil {
+					return err
+				}
+				pfields[k] = t
 			default:
 				return errors.New("Unrecognized parser")
 			}

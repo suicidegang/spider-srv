@@ -30,6 +30,26 @@ func (text TextParser) Query(doc *goquery.Document) (interface{}, error) {
 	return n, nil
 }
 
+type AttrParser struct {
+	Target  string   `json:"value"`
+	Attr    string   `json:"attr"`
+	Index   int      `json:"i"`
+	Filters []string `json:"filters"`
+}
+
+func (attr AttrParser) Query(doc *goquery.Document) (interface{}, error) {
+	n := doc.Find(attr.Target).Eq(attr.Index).AttrOr(attr.Attr, "")
+
+	for _, filter := range attr.Filters {
+		switch filter {
+		case "trim-space":
+			n = strings.TrimSpace(n)
+		}
+	}
+
+	return n, nil
+}
+
 type PipeParser struct {
 	Target string `json:"value"`
 	Index  int    `json:"i"`
