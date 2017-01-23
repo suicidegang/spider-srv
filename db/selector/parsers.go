@@ -18,7 +18,15 @@ type TextParser struct {
 }
 
 func (text TextParser) Query(doc *goquery.Document) (interface{}, error) {
-	n := doc.Find(text.Target).Eq(text.Index).Text()
+	var n string
+
+	if text.Index >= 0 {
+		n = doc.Find(text.Target).Eq(text.Index).Text()
+	} else {
+		doc.Find(text.Target).Each(func(i int, s *goquery.Selection) {
+			n = n + s.Text() + "<br />"
+		})
+	}
 
 	for _, filter := range text.Filters {
 		switch filter {
