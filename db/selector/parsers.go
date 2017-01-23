@@ -7,6 +7,7 @@ import (
 )
 
 const TEXT_PARSER string = "text"
+const PIPE_PARSER string = "pipe"
 const INNER_PARSER string = "innerHTML"
 const ATTR_PARSER string = "attr"
 
@@ -17,7 +18,6 @@ type TextParser struct {
 }
 
 func (text TextParser) Query(doc *goquery.Document) (interface{}, error) {
-
 	n := doc.Find(text.Target).Eq(text.Index).Text()
 
 	for _, filter := range text.Filters {
@@ -28,4 +28,14 @@ func (text TextParser) Query(doc *goquery.Document) (interface{}, error) {
 	}
 
 	return n, nil
+}
+
+type PipeParser struct {
+	Target string `json:"value"`
+	Index  int    `json:"i"`
+	Nested int    `json:"then"`
+}
+
+func (pipe PipeParser) Query(doc *goquery.Document) (interface{}, error) {
+	return nil, nil
 }

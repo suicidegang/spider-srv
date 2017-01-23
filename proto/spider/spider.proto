@@ -2,6 +2,7 @@ syntax = "proto3";
 
 service Spider {
 	rpc TrackSitemap(TrackSitemapRequest) returns (TrackSitemapResponse) {}
+	rpc TrackURL(TrackURLRequest) returns (TrackURLResponse) {}
 	rpc FetchDataset(FetchDatasetRequest) returns (FetchDatasetResponse) {}
 	rpc PrepareDatasets(PrepareDatasetsRequest) returns (PrepareDatasetsResponse) {} 
 	rpc FetchPages(FetchPagesRequest) returns (FetchPagesResponse) {}
@@ -38,6 +39,15 @@ message TrackSitemapRequest {
 }
 
 message TrackSitemapResponse {
+	uint64 id = 1;
+}
+
+message TrackURLRequest {
+	string url = 1;
+	string group = 2;
+}
+
+message TrackURLResponse {
 	uint64 id = 1;
 }
 

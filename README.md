@@ -48,6 +48,13 @@ $ micro query sg.micro.srv.spider Spider.TrackSitemap '{
     }
 }'
 ```
+### Spider.TrackURL
+```shell
+$ micro query sg.micro.srv.spider Spider.TrackURL '{
+    "url": "https://comparateca.com/iphone-6",
+    "group": "comparateca"
+}'
+```
 
 ### Spider.FetchDataset
 ```shell

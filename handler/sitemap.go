@@ -34,7 +34,18 @@ func (srv *Spider) TrackSitemap(ctx context.Context, req *proto.TrackSitemapRequ
 	}
 
 	res.Id = uint64(smap.ID)
+	return nil
+}
 
+func (src *Spider) TrackURL(ctx context.Context, req *proto.TrackURLRequest, res *proto.TrackURLResponse) error {
+	log.Printf("Spider::trackURL %+v", req)
+
+	ourl, err := url.Prepare(db.Db, db.Redis, req.Url, req.Group, uint(0))
+	if err != nil {
+		return errors.InternalServerError("sg.micro.srv.spider.TrackURL", err.Error())
+	}
+
+	res.Id = uint64(ourl.ID)
 	return nil
 }
 
