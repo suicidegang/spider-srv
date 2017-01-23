@@ -67,7 +67,7 @@
 	"face_detection":         {"use": "text", "i": 64, "value": ".tab_phone tr td:last-child", "filters": ["trim-space"]},
 	"bsi_sensor":             {"use": "text", "i": 65, "value": ".tab_phone tr td:last-child", "filters": ["trim-space"]},
 	"hdr":                    {"use": "text", "i": 66, "value": ".tab_phone tr td:last-child", "filters": ["trim-space"]},
-	
+
 	"front_camera":            {"use": "text", "i": 68, "value": ".tab_phone tr td:last-child", "filters": ["trim-space"]},
 	"front_camera_resolution": {"use": "text", "i": 69, "value": ".tab_phone tr td:last-child", "filters": ["trim-space"]},
 	"video_2":                 {"use": "text", "i": 70, "value": ".tab_phone tr td:last-child", "filters": ["trim-space"]},
@@ -98,5 +98,8 @@
 	"battery_capacity":     {"use": "text", "i": 102, "value": ".tab_phone tr td:last-child", "filters": ["trim-space"]},
 	"battery_model":        {"use": "text", "i": 103, "value": ".tab_phone tr td:last-child", "filters": ["trim-space"]},
 	"talk_time":            {"use": "text", "i": 104, "value": ".tab_phone tr td:last-child", "filters": ["trim-space"]},
-	"wait_time":            {"use": "text", "i": 105, "value": ".tab_phone tr td:last-child", "filters": ["trim-space"]}
+	"wait_time":            {"use": "text", "i": 105, "value": ".tab_phone tr td:last-child", "filters": ["trim-space"]},
+
+	"photo": {"use": "attr", "i": 0, "value": ".celular_capa img", "attr": "src", "filters": ["trim-space"]},
+	"description": {"use": "text", "i": -1, "value": ".celular_capa > p", "filters": ["trim-space"]}
 }

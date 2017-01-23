@@ -4,6 +4,7 @@ service Spider {
 	rpc TrackSitemap(TrackSitemapRequest) returns (TrackSitemapResponse) {}
 	rpc TrackURL(TrackURLRequest) returns (TrackURLResponse) {}
 	rpc FetchDataset(FetchDatasetRequest) returns (FetchDatasetResponse) {}
+	rpc FetchDatasetBy(FetchDatasetByRequest) returns (FetchDatasetByResponse) {}
 	rpc PrepareDatasets(PrepareDatasetsRequest) returns (PrepareDatasetsResponse) {} 
 	rpc FetchPages(FetchPagesRequest) returns (FetchPagesResponse) {}
 	// rpc Update(UpdateRequest) returns (UpdateResponse) {}
@@ -28,6 +29,15 @@ message FetchDatasetRequest {
 }
 
 message FetchDatasetResponse {
+	map<string, string> data = 1;
+}
+
+message FetchDatasetByRequest {
+	uint64 selector_id = 1;
+	repeated string conditions = 2;
+}
+
+message FetchDatasetByResponse {
 	map<string, string> data = 1;
 }
 

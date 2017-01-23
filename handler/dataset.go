@@ -27,6 +27,27 @@ func (srv *Spider) FetchDataset(ctx context.Context, req *proto.FetchDatasetRequ
 	return nil
 }
 
+func (srv *Spider) FetchDatasetBy(ctx context.Context, req *proto.FetchDatasetByRequest, res *proto.FetchDatasetByResponse) error {
+	log.Printf("Spider::fetchDatasetBy %+v", req)
+
+	u, err := url.FindBy(db.Db, req.Conditions)
+	if err != nil {
+		return errors.InternalServerError("sg.micro.srv.spider.FetchDatasetBy", err.Error())
+	}
+
+	ds, err := dataset.Prepare(db.Db, db.Redis, uint(req.SelectorId), uint(u.ID))
+	if err != nil {
+		return errors.InternalServerError("sg.micro.srv.spiderFetchDataset", err.Error())
+	}
+
+	res.Data, err = ds.Document()
+	if err != nil {
+		return errors.InternalServerError("sg.micro.srv.spiderFetchDataset", err.Error())
+	}
+
+	return nil
+}
+
 func (srv *Spider) PrepareDatasets(ct context.Context, req *proto.PrepareDatasetsRequest, res *proto.PrepareDatasetsResponse) error {
 	log.Printf("Spider::prepareDatasets %+v", req)
 

@@ -65,6 +65,26 @@ func All(db *gorm.DB) Urls {
 	return list
 }
 
+func FindBy(db *gorm.DB, conditions []string) (Url, error) {
+	var ourl Url
+
+	if len(conditions) < 1 {
+		return ourl, errors.New("Not enough conditions")
+	}
+
+	statement, binds := conditions[0], conditions[1:]
+	bind := make([]interface{}, len(binds))
+	for i, v := range binds {
+		bind[i] = v
+	}
+
+	if db.Where(statement, bind...).First(&ourl).RecordNotFound() {
+		return ourl, errors.New("Couldnt find any by those conditions.")
+	}
+
+	return ourl, nil
+}
+
 func FindFullText(db *gorm.DB, search string) Urls {
 	query := db.Table("spider_urls_index uix")
 	query = query.Select("u.*, ts_rank(document, plainto_tsquery('es', ?)) AS score", search)
