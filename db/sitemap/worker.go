@@ -2,34 +2,36 @@ package sitemap
 
 import (
 	"log"
+
+	"github.com/satori/go.uuid"
 )
 
 type Worker struct {
-	ID       int
-	Work     chan SitemapRequest
-	Queue    chan chan SitemapRequest
+	ID       string
+	Queue    chan SitemapRequest
 	QuitChan chan bool
 }
 
 func (worker *Worker) Start() {
 	go func() {
-		log.Printf("Starting worker %v", worker.ID)
+		log.Printf("Spawning worker id %s", worker.ID)
 
 		for {
-			log.Printf("Worker %b ready again :D", worker.ID)
-
-			// Add the worker into workers queue
-			worker.Queue <- worker.Work
-
 			select {
-			case work := <-worker.Work:
+			case work := <-worker.Queue:
 				log.Printf("Crawled %s : depth %v", work.Url, work.Depth)
-				work.Work()
+				work.Work(worker.Enqueue)
 
 			case <-worker.QuitChan:
 				log.Printf("worker %v stopping", worker.ID)
 			}
 		}
+	}()
+}
+
+func (worker *Worker) Enqueue(job SitemapRequest) {
+	go func() {
+		worker.Queue <- job
 	}()
 }
 
@@ -39,11 +41,10 @@ func (worker *Worker) Stop() {
 	}()
 }
 
-func NewWorker(id int, queue chan chan SitemapRequest) Worker {
+func NewWorker() Worker {
 	w := Worker{
-		ID:       id,
-		Work:     make(chan SitemapRequest),
-		Queue:    queue,
+		ID:       uuid.NewV4().String(),
+		Queue:    make(chan SitemapRequest, 500),
 		QuitChan: make(chan bool),
 	}
 

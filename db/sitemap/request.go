@@ -25,25 +25,27 @@ type SitemapRequest struct {
 	R            *redis.Client
 }
 
+type enqueue func(job SitemapRequest)
+
 // Stuff to be done when worker get to this job.
-func (req SitemapRequest) Work() {
+func (req SitemapRequest) Work(next enqueue) {
 
 	// Iterate over patterns to see if any of them matches the url & process it.
 	for group, pattern := range req.Patterns {
 		if pattern.MatchString(req.Url) {
-			req.ProcessPageURL(group)
+			req.ProcessPageURL(group, next)
 			return
 		}
 	}
 
 	// Uncategorized urls that match entry point must be processed as site pages.
 	if strings.HasPrefix(req.Url, req.Entry) {
-		req.ProcessPageURL("site")
+		req.ProcessPageURL("site", next)
 	}
 }
 
 // Process page
-func (req SitemapRequest) ProcessPageURL(group string) {
+func (req SitemapRequest) ProcessPageURL(group string, next enqueue) {
 
 	ourl, err := url.Prepare(req.DB, req.R, req.Url, group, uint(req.SitemapID))
 	if err != nil {
@@ -61,7 +63,6 @@ func (req SitemapRequest) ProcessPageURL(group string) {
 		return
 	}
 
-	log.Printf("[url] %+v", ourl)
 	if uint64(req.Depth+1) > req.FinalDepth {
 		return
 	}
@@ -76,6 +77,7 @@ func (req SitemapRequest) ProcessPageURL(group string) {
 
 			lurl, err := urls.Parse(link)
 			if err != nil {
+				log.Printf("Invalid link %s", link)
 				return
 			}
 
@@ -102,9 +104,8 @@ func (req SitemapRequest) ProcessPageURL(group string) {
 
 			for _, pattern := range req.Patterns {
 				if pattern.MatchString(lurl.String()) {
-
 					// Send the request to the queue
-					Queue <- w
+					next(w)
 					return
 				}
 			}
@@ -113,7 +114,7 @@ func (req SitemapRequest) ProcessPageURL(group string) {
 			if strings.HasPrefix(lurl.String(), req.Entry) {
 
 				// Send the request to the queue
-				Queue <- w
+				next(w)
 			}
 		}
 	})

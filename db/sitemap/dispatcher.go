@@ -6,39 +6,28 @@ import (
 	"fmt"
 )
 
-// A buffered channel that we can send work requests on.
-var Queue = make(chan SitemapRequest, 100000)
-
-// Queue channel
-var SitemapQueue chan chan SitemapRequest
+// A buffered channel where we send initial work requests to...
+var Queue = make(chan SitemapRequest, 20)
 
 // Urls hash table for o(1) concurrent checks
 var SitemapTable cmap.ConcurrentMap
 var SitemapRetries cmap.ConcurrentMap
 
-func Dispatcher(workers int) {
-	SitemapQueue = make(chan chan SitemapRequest, workers)
+func Dispatcher() {
 	SitemapTable = cmap.New()
 	SitemapRetries = cmap.New()
 
-	// Start n workers using brand new queue channel
-	for n := 0; n < workers; n++ {
-		w := NewWorker(n+1, SitemapQueue)
-		w.Start()
-	}
-
 	go func() {
 		for {
+			fmt.Printf("Dispatcher cycle ran.")
+
 			select {
 			case work := <-Queue:
-				fmt.Printf("+")
+				fmt.Printf("Received work request in generic queue. Spawning worker.")
 
-				go func() {
-					worker := <-SitemapQueue
-					fmt.Printf("-")
-
-					worker <- work
-				}()
+				worker := NewWorker()
+				worker.Start()
+				worker.Queue <- work
 			}
 		}
 	}()

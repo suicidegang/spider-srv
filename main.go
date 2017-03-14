@@ -56,7 +56,7 @@ func main() {
 			log.Printf("[sg.micro.srv.spider] Starting service...")
 
 			// Start the work queue dispatcher
-			sitemap.Dispatcher(AsyncWorkers)
+			sitemap.Dispatcher()
 			dataset.PQueueDispatcher(AsyncWorkers)
 
 			go func() {
