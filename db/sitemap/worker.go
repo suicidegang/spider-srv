@@ -30,6 +30,9 @@ func (worker *Worker) Start() {
 }
 
 func (worker *Worker) Enqueue(job SitemapRequest) {
+	// In case the internal buffer queue for this worker
+	// gets overfilled the send op would block causing mess
+	// & destruction, spawn light goroutines to manage that.
 	go func() {
 		worker.Queue <- job
 	}()
