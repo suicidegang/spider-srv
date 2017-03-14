@@ -1,0 +1,128 @@
+micro query sg.micro.srv.spider Spider.TrackSitemap '{
+    "from": "https://www.whistleout.com.mx/CellPhones",
+    "name": "Whistleout cellphones #4",
+    "depth": 4,
+    "patterns": {
+        "home": "^https://www\\.whistleout\\.com\\.mx/CellPhones/?$",
+        "carrier": "^https://www\\.whistleout\\.com\\.mx/CellPhones/Carriers/([[:alnum:]\\-]+)$",
+        "phone": "^https://www\\.whistleout\\.com\\.mx/CellPhones/Phones/([[:alnum:]\\-]+)/([[:alnum:]\\-]+)$",
+        "phone-plans": "^https://www\\.whistleout\\.com\\.mx/CellPhones/Carriers/([[:alnum:]\\-]+)/Phones/([[:alnum:]\\-]+)/([[:alnum:]\\-]+)$",
+        "plan": "^https://www\\.whistleout\\.com\\.mx/CellPhones/Carriers/([[:alnum:]\\-]+)/([[:alnum:]\\-]+)/([[:alnum:]\\-]+)(\\??[[:alnum:]\\=\\&_]+)$"
+    }
+}'
+
+micro query sg.micro.srv.spider Spider.TrackSitemap '{
+    "from": "https://www.whistleout.com.mx/CellPhones",
+    "name": "Whistleout phones",
+    "depth": 4,
+    "patterns": {
+        "home": "^https://www\\.whistleout\\.com\\.mx/CellPhones/?$",
+        "carrier": "^https://www\\.whistleout\\.com\\.mx/CellPhones/Carriers/([[:alnum:]\\-]+)$",
+        "phone": "^https://www\\.whistleout\\.com\\.mx/CellPhones/Phones/([[:alnum:]\\-]+)/([[:alnum:]\\-]+)$",
+        "phone-plans": "^https://www\\.whistleout\\.com\\.mx/CellPhones/Carriers/([[:alnum:]\\-]+)/Phones/([[:alnum:]\\-]+)/([[:alnum:]\\-]+)$",
+        "plan": "^https://www\\.whistleout\\.com\\.mx/CellPhones/Carriers/([[:alnum:]\\-]+)/([[:alnum:]\\-]+)/([[:alnum:]\\-]+)(\\??[[:alnum:]=\\-&_]+)$"
+    }
+}'
+
+go run main.go --pgsql_url="host=10.88.64.3 user=comparateca password=(5RQhu/|4%d}YeG* dbname=comparateca sslmode=disable"
+
+micro query sg.micro.srv.spider Spider.TrackURL '{
+    "url": "http://www.movilcelular.es/movil/samsung-galaxy-j3-2017-duos-sm-j327fds/3127",
+    "group": "movilcelular"
+}'
+
+micro query sg.micro.srv.spider Spider.FetchDataset '{
+    "id": 1,
+    "url_id": 10609
+}'
+
+micro query sg.micro.srv.spider Spider.FetchDataset '{
+    "id": 8,
+    "url_id": 12117
+}'
+
+micro query sg.micro.srv.spider Spider.FetchDatasetBy '{
+    "selector_id": 8,
+    "conditions": ["\"group\" = ? AND url LIKE ?", "movilcelular", "%3126"]
+}'
+
+micro query sg.micro.srv.spider Spider.FetchPages '{
+    "search": "vas a volar iphone 6"
+}'
+
+curl -H 'Content-Type: application/json' -d '{"id": 1, "url_id": 10609}' http://127.0.0.1:8081/spider/spider/fetchDataset
+
+curl -d 'service=sg.micro.srv.spider' \
+    -d 'method=Spider.FetchPages' \
+    -d 'request={"search": "vas a volar iphone 6"}' http://127.0.0.1:8081/rpc
+
+micro query sg.micro.srv.spider Spider.FetchDataset '{
+    "id": 2,
+    "url_id": 2292
+}'
+
+micro query sg.micro.srv.spider Spider.PrepareDatasets '{
+    "selector_id": 3,
+    "group": "movilcelular"
+}'
+
+micro query sg.micro.srv.spider Spider.PrepareDatasets '{
+    "selector_id": 2,
+    "group": "plan",
+    "conditions": ["query_params LIKE ?", "contract=%&phone=%"]
+}'
+
+ // Extracción de datos de un telefono celular en whistleout  
+{“name”: [“text”, “h1 span”], ´: [“text”, “#phone div[data-gallery] .col-xs-16 div.bor-t-1”, 0], “os”: [“text”, “#phone div[data-gallery] .col-xs-16 div.bor-t-1”, 1]}
+
+{
+	"name": {"use": "text", "value": "h1 span", "filters": ["trim-space"]},
+	"screen": {"use": "text", "value": "#phone div[data-gallery] .col-xs-16 div.bor-t-1", "filters": ["trim-space"]},
+	"os": {"use": "text", "value": "#phone div[data-gallery] .col-xs-16 div.bor-t-1", "i": 1, "filters": ["trim-space"]},
+	"camera": {"use": "text", "value": "#phone div[data-gallery] .col-xs-16 div.bor-t-1", "i": 2, "filters": ["trim-space"]}, 
+	"storage": {"use": "text", "value": "#phone div[data-gallery] .col-xs-16 div.bor-t-1", "i": 3, "filters": ["trim-space"]},
+	"talktime": {"use": "text", "value": "#phone div[data-gallery] .col-xs-16 div.bor-t-1", "i": 4, "filters": ["trim-space"]}, 
+	"standby": {"use": "text", "value": "#phone div[data-gallery] .col-xs-16 div.bor-t-1", "i": 5, "filters": ["trim-space"]}, 
+	"width": {"use": "text", "value": "#phone div[data-gallery] .col-xs-16 div.bor-t-1", "i": 6, "filters": ["trim-space"]}, 
+	"height": {"use": "text", "value": "#phone div[data-gallery] .col-xs-16 div.bor-t-1", "i": 7, "filters": ["trim-space"]},
+	"screen.flashType": {"use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"screen.resolution": {"use": "text", "value": "#specs div div div table tbody tr td", "i": 1, "filters": ["trim-space"]}, 
+	"screen.size": {"use": "text", "value": "#specs div div div table tbody tr td", "i": 2, "filters": ["trim-space"]}, 
+	"screen.touchscreen": {"use": "text", "value": "#specs div div div table tbody tr td", "i": 3, "filters": ["trim-space"]}, 
+	"camera.resolution": {"use": "text", "value": "#specs div div div table tbody tr td", "i": 4, "filters": ["trim-space"]}, 
+	"camera.frontal": {"use": "text", "value": "#specs div div div table tbody tr td", "i": 5, "filters": ["trim-space"]}, 
+	"camera.3d": {"use": "text", "value": "#specs div div div table tbody tr td", "i": 6, "filters": ["trim-space"]}, 
+	"camera.flash": {"use": "text", "value": "#specs div div div table tbody tr td", "i": 7, "filters": ["trim-space"]}, 
+	"camera.video": {"use": "text", "value": "#specs div div div table tbody tr td", "i": 8, "filters": ["trim-space"]},
+	"music.player": {"use": "text", "value": "#specs div div div table tbody tr td", "i": 9, "filters": ["trim-space"]},
+	"music.video": {"use": "text", "value": "#specs div div div table tbody tr td", "i": 10, "filters": ["trim-space"]},
+	"music.videocalls": {"use": "text", "value": "#specs div div div table tbody tr td", "i": 11, "filters": ["trim-space"]},
+	"music.radio": {"use": "text", "value": "#specs div div div table tbody tr td", "i": 12, "filters": ["trim-space"]},
+	"music.videocalls": {"use": "text", "value": "#specs div div div table tbody tr td", "i": 13, "filters": ["trim-space"]},
+	"music.audioformats": {"use": "text", "value": "#specs div div div table tbody tr td", "i": 14, "filters": ["trim-space"]},
+	"music.videoformats": {"use": "text", "value": "#specs div div div table tbody tr td", "i": 15, "filters": ["trim-space"]},
+	"body.factor": {"i": 15, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"body.width": {"i": 16, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"body.height": {"i": 17, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"body.thickness": {"i": 18, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"body.weight": {"i": 19, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"body.accelerometer": {"i": 20, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"body.rotation": {"i": 21, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"general.gps": {"i": 22, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"general.battery2g": {"i": 23, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"general.standby": {"i": 24, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"general.appstore": {"i": 25, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"general.cpu": {"i": 26, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"general.os": {"i": 27, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"general.released": {"i": 28, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"connectivity.main": {"i": 29, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"connectivity.speed": {"i": 30, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"connectivity.wifi": {"i": 31, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"connectivity.usb": {"i": 32, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"connectivity.bluetooth": {"i": 33, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"connectivity.network1": {"i": 34, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"connectivity.network2": {"i": 35, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"memory.ram": {"i": 36, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"memory.internal": {"i": 37, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]},
+	"memory.expands": {"i": 38, "use": "text", "value": "#specs div div div table tbody tr td", "filters": ["trim-space"]}
+}

@@ -45,7 +45,7 @@ func (sitemap Sitemap) Create(db *gorm.DB, r *redis.Client) (Sitemap, error) {
 		patterns[group] = r
 	}
 
-	w := SitemapRequest{Url: sitemap.EntryUrl, Depth: 0, Patterns: patterns, SitemapID: sitemap.ID, FinalDepth: sitemap.Depth, DB: db, R: r}
+	w := SitemapRequest{Url: sitemap.EntryUrl, Entry: sitemap.EntryUrl, UniqueParams: false, Depth: 0, Patterns: patterns, SitemapID: sitemap.ID, FinalDepth: sitemap.Depth, DB: db, R: r}
 
 	// Send the request to the queue
 	Queue <- w

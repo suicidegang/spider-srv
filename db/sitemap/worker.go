@@ -16,12 +16,14 @@ func (worker *Worker) Start() {
 		log.Printf("Starting worker %v", worker.ID)
 
 		for {
+			log.Printf("Worker %b ready again :D", worker.ID)
+
 			// Add the worker into workers queue
 			worker.Queue <- worker.Work
 
 			select {
 			case work := <-worker.Work:
-				log.Printf("Received work request for %v in %v depth", work.Url, work.Depth)
+				log.Printf("Crawled %s : depth %v", work.Url, work.Depth)
 				work.Work()
 
 			case <-worker.QuitChan:

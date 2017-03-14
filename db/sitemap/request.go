@@ -9,87 +9,114 @@ import (
 	"log"
 	urls "net/url"
 	"regexp"
+	"strings"
 )
 
+// Sitemap request represents an URL that must
 type SitemapRequest struct {
-	Url        string
-	Depth      int
-	Patterns   map[string]*regexp.Regexp
-	SitemapID  uint
-	FinalDepth uint64
-	DB         *gorm.DB
-	R          *redis.Client
+	Url          string
+	Entry        string
+	Depth        int
+	Patterns     map[string]*regexp.Regexp
+	SitemapID    uint
+	FinalDepth   uint64
+	UniqueParams bool
+	DB           *gorm.DB
+	R            *redis.Client
 }
 
+// Stuff to be done when worker get to this job.
 func (req SitemapRequest) Work() {
 
-	// First check to avoid dup ops within tree
-	if SitemapTable.Has(url.HashMD5(req.Url)) {
+	// Iterate over patterns to see if any of them matches the url & process it.
+	for group, pattern := range req.Patterns {
+		if pattern.MatchString(req.Url) {
+			req.ProcessPageURL(group)
+			return
+		}
+	}
+
+	// Uncategorized urls that match entry point must be processed as site pages.
+	if strings.HasPrefix(req.Url, req.Entry) {
+		req.ProcessPageURL("site")
+	}
+}
+
+// Process page
+func (req SitemapRequest) ProcessPageURL(group string) {
+
+	ourl, err := url.Prepare(req.DB, req.R, req.Url, group, uint(req.SitemapID))
+	if err != nil {
+		req.ThrowError(err)
 		return
 	}
 
-	// Iterate over patterns to see if any of them matches the url
-	for group, pattern := range req.Patterns {
-		if pattern.MatchString(req.Url) {
-			ourl, err := url.Prepare(req.DB, req.R, req.Url, group, uint(req.SitemapID))
-			if err != nil {
-				req.ThrowError(err)
-				return
-			}
+	// Keeps a map of hashes for further O(1) checks
+	SitemapTable.Set(req.Hash(), 1)
 
-			hash := ourl.Hash()
-			if SitemapTable.Has(hash) {
-				log.Printf("[skip] %v", hash)
-				return
-			}
-
-			// Retrieve URL's queriable document
-			doc, err := ourl.Document(req.R)
-			if err != nil {
-				req.ThrowError(err)
-				return
-			}
-
-			// Keep map of hashes for further O(1) checks
-			SitemapTable.Set(hash, 1)
-			log.Printf("[url] %+v", ourl)
-			if uint64(req.Depth+1) > req.FinalDepth {
-				return
-			}
-
-			doc.Find("a[href]").Each(func(i int, s *goquery.Selection) {
-				link, exists := s.Attr("href")
-
-				if exists && len(link) > 1 {
-					if _, err := urls.Parse(link); err != nil {
-						return
-					}
-
-					// Relative path should be prefixed with base url
-					if link[0:1] == "/" {
-						link = url.FixRelative(link, req.Url)
-					}
-
-					if SitemapTable.Has(url.HashMD5(link)) {
-						return
-					}
-
-					for _, pattern := range req.Patterns {
-						if pattern.MatchString(link) {
-
-							w := SitemapRequest{Url: link, Depth: req.Depth + 1, Patterns: req.Patterns, SitemapID: req.SitemapID, FinalDepth: req.FinalDepth, DB: req.DB, R: req.R}
-
-							// Send the request to the queue
-							Queue <- w
-						}
-					}
-
-				}
-			})
-
-			break
-		}
+	// Retrieve URL's queriable document
+	doc, err := ourl.Document(req.R)
+	if err != nil {
+		req.ThrowError(err)
+		return
 	}
+
+	log.Printf("[url] %+v", ourl)
+	if uint64(req.Depth+1) > req.FinalDepth {
+		return
+	}
+
+	doc.Find("a[href]").Each(func(i int, s *goquery.Selection) {
+		if link, exists := s.Attr("href"); exists && len(link) > 1 {
+
+			// Relative path should be prefixed with base url
+			if link[0:1] == "/" {
+				link = url.FixRelative(link, req.Url)
+			}
+
+			lurl, err := urls.Parse(link)
+			if err != nil {
+				return
+			}
+
+			if !req.UniqueParams {
+				lurl.RawQuery = ""
+			}
+
+			if SitemapTable.Has(url.HashMD5(lurl.String())) {
+				return
+			}
+
+			// Keep it kind of protected from other routines...
+			SitemapTable.Set(url.HashMD5(lurl.String()), 1)
+
+			w := SitemapRequest{
+				Url:        lurl.String(),
+				Entry:      req.Entry,
+				Depth:      req.Depth + 1,
+				Patterns:   req.Patterns,
+				SitemapID:  req.SitemapID,
+				FinalDepth: req.FinalDepth,
+				DB:         req.DB, R: req.R,
+			}
+
+			for _, pattern := range req.Patterns {
+				if pattern.MatchString(lurl.String()) {
+
+					// Send the request to the queue
+					Queue <- w
+					return
+				}
+			}
+
+			// Uncategorized urls that match entry point must be crawled
+			if strings.HasPrefix(lurl.String(), req.Entry) {
+
+				// Send the request to the queue
+				Queue <- w
+			}
+		}
+	})
 }
 
 func (req SitemapRequest) Hash() string {
