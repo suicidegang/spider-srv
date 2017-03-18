@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	_ "net/http/pprof"
+	"time"
 
 	"github.com/micro/cli"
 	"github.com/micro/go-micro"
@@ -22,6 +23,8 @@ func main() {
 	service := micro.NewService(
 		micro.Name("sg.micro.srv.spider"),
 		micro.Version("0.1"),
+		micro.RegisterTTL(time.Second*30),
+		micro.RegisterInterval(time.Second*10),
 		micro.Flags(
 			cli.StringFlag{
 				Name:   "redis_url",
