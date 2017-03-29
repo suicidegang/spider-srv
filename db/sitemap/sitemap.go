@@ -20,6 +20,11 @@ type Sitemap struct {
 	Updating bool
 }
 
+type Pattern struct {
+	Name    string `json:"name"`
+	Matches string `json:"matches"`
+}
+
 var InvalidPatternErr = errors.New("Could not compile URL pattern into regexp.")
 
 var slugBind = regexp.MustCompile(`{([[:alnum:]|_]+):slug}`)
@@ -42,7 +47,7 @@ func (sitemap Sitemap) Create(db *gorm.DB, r *redis.Client) (Sitemap, error) {
 		return sitemap, err
 	}
 
-	var groups map[string]string
+	var groups []Pattern
 	patterns := map[string]*regexp.Regexp{}
 
 	if err := json.Unmarshal([]byte(sitemap.Patterns), &groups); err != nil {
@@ -52,18 +57,18 @@ func (sitemap Sitemap) Create(db *gorm.DB, r *redis.Client) (Sitemap, error) {
 	regexer := strings.NewReplacer(".", "\\.", "/", "\\/", "?", "\\?", "$", sitemap.EntryUrl)
 
 	// Create regex patterns from patterns with bindings
-	for group, pattern := range groups {
-		reg := regexer.Replace(pattern)
+	for _, pattern := range groups {
+		reg := regexer.Replace(pattern.Matches)
 		reg = bslug(reg)
 		reg = bnum(reg)
-		log.Printf("%s using %s", group, reg)
+		log.Printf("%s using %s", pattern.Name, reg)
 		r, err := regexp.Compile(reg)
 
 		if err != nil {
 			return sitemap, InvalidPatternErr
 		}
 
-		patterns[group] = r
+		patterns[pattern.Name] = r
 	}
 
 	w := SitemapRequest{Url: sitemap.EntryUrl, Entry: sitemap.EntryUrl, UniqueParams: false, Depth: 0, Patterns: patterns, SitemapID: sitemap.ID, FinalDepth: sitemap.Depth, DB: db, R: r}

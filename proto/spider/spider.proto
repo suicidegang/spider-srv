@@ -42,9 +42,14 @@ message FetchDatasetByResponse {
 }
 
 message TrackSitemapRequest {
+	message Pattern {
+		string name = 1;
+		string matches = 2;
+	}
+
 	string from = 1;
 	uint64 depth = 2;
-	map<string, string> patterns = 3;
+	repeated Pattern patterns = 3;
 	string name = 4;
 }
 
