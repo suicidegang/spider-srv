@@ -36,17 +36,17 @@ Spider
 ### Spider.TrackSitemap
 ```shell
 $ micro query sg.micro.srv.spider Spider.TrackSitemap '{
-    "from": "https://www.whistleout.com.mx/CellPhones",
-    "name": "Whistleout cellphones #4",
+    "from": "http://www.data.com/specs/",
+    "name": "Data specs",
     "depth": 4,
-    "patterns": {
-        "home": "^https://www\\.whistleout\\.com\\.mx/CellPhones/?$",
-        "carrier": "^https://www\\.whistleout\\.com\\.mx/CellPhones/Carriers/([[:alnum:]\\-]+)$",
-        "phone": "^https://www\\.whistleout\\.com\\.mx/CellPhones/Phones/([[:alnum:]\\-]+)/([[:alnum:]\\-]+)$",
-        "phone-plans": "^https://www\\.whistleout\\.com\\.mx/CellPhones/Carriers/([[:alnum:]\\-]+)/Phones/([[:alnum:]\\-]+)/([[:alnum:]\\-]+)$",
-        "plan": "^https://www\\.whistleout\\.com\\.mx/CellPhones/Carriers/([[:alnum:]\\-]+)/([[:alnum:]\\-]+)/([[:alnum:]\\-]+)(\\??[[:alnum:]\\=\\&_]+)$"
-    }
-}'
+    "strict": true, 
+    "patterns": [
+        {"name": "motorcycle", "matches": "^{manufacturer:slug}/{type:slug}/{year:num}/{series:slug}/{model:slug}.html"},
+        {"name": "filtered-list", "matches": "^{list:slug}/{filter:slug}.html"},
+        {"name": "list", "matches": "^{list:slug}.html"},
+        {"name": "landing", "matches": "^$"}
+    ]
+}
 ```
 ### Spider.TrackURL
 ```shell
