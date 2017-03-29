@@ -33,21 +33,33 @@ func (req SitemapRequest) Work(next enqueue) {
 	// Iterate over patterns to see if any of them matches the url & process it.
 	for group, pattern := range req.Patterns {
 		if pattern.MatchString(req.Url) {
-			req.ProcessPageURL(group, next)
+			params := pattern.SubexpNames()
+			meta := map[string]string{}
+
+			if len(params) > 1 {
+				values := pattern.FindStringSubmatch(req.Url)
+				for i, name := range params {
+					if i > 0 {
+						meta[name] = values[i]
+					}
+				}
+			}
+
+			req.ProcessPageURL(group, meta, next)
 			return
 		}
 	}
 
 	// Uncategorized urls that match entry point must be processed as site pages.
 	if strings.HasPrefix(req.Url, req.Entry) {
-		req.ProcessPageURL("site", next)
+		req.ProcessPageURL("site", map[string]string{}, next)
 	}
 }
 
 // Process page
-func (req SitemapRequest) ProcessPageURL(group string, next enqueue) {
+func (req SitemapRequest) ProcessPageURL(group string, meta map[string]string, next enqueue) {
 
-	ourl, err := url.Prepare(req.DB, req.R, req.Url, group, uint(req.SitemapID))
+	ourl, err := url.Prepare(req.DB, req.R, req.Url, group, meta, uint(req.SitemapID))
 	if err != nil {
 		req.ThrowError(err)
 		return

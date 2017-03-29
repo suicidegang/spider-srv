@@ -40,7 +40,7 @@ func (srv *Spider) TrackSitemap(ctx context.Context, req *proto.TrackSitemapRequ
 func (src *Spider) TrackURL(ctx context.Context, req *proto.TrackURLRequest, res *proto.TrackURLResponse) error {
 	log.Printf("Spider::trackURL %+v", req)
 
-	ourl, err := url.Prepare(db.Db, db.Redis, req.Url, req.Group, uint(0))
+	ourl, err := url.Prepare(db.Db, db.Redis, req.Url, req.Group, map[string]string{}, uint(0))
 	if err != nil {
 		return errors.InternalServerError("sg.micro.srv.spider.TrackURL", err.Error())
 	}

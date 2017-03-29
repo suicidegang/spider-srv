@@ -5,17 +5,32 @@ import (
 	"gopkg.in/redis.v5"
 
 	"encoding/json"
+	"errors"
 	"log"
 	"regexp"
+	"strings"
 )
 
 type Sitemap struct {
 	gorm.Model
-	Name     string `gorm:"unique_index"`
+	Name     string
 	EntryUrl string
 	Depth    uint64
 	Patterns string `sql:"type:JSONB NOT NULL DEFAULT '{}'::JSONB"`
 	Updating bool
+}
+
+var InvalidPatternErr = errors.New("Could not compile URL pattern into regexp.")
+
+var slugBind = regexp.MustCompile(`{([[:alnum:]|_]+):slug}`)
+var numBind = regexp.MustCompile(`{([[:alnum:]]+):num}`)
+
+func bslug(input string) string {
+	return slugBind.ReplaceAllString(input, `(?P<$1>[[:alnum:]-_]+)`)
+}
+
+func bnum(input string) string {
+	return numBind.ReplaceAllString(input, `(?P<$1>[[:digit:]]+)`)
 }
 
 func (sitemap Sitemap) Create(db *gorm.DB, r *redis.Client) (Sitemap, error) {
@@ -34,12 +49,18 @@ func (sitemap Sitemap) Create(db *gorm.DB, r *redis.Client) (Sitemap, error) {
 		return sitemap, err
 	}
 
-	// Compile regexp patterns received as strings
+	regexer := strings.NewReplacer(".", "\\.", "/", "\\/", "?", "\\?", "$", sitemap.EntryUrl)
+
+	// Create regex patterns from patterns with bindings
 	for group, pattern := range groups {
-		r, err := regexp.Compile(pattern)
+		reg := regexer.Replace(pattern)
+		reg = bslug(reg)
+		reg = bnum(reg)
+		log.Printf("%s using %s", group, reg)
+		r, err := regexp.Compile(reg)
 
 		if err != nil {
-			return sitemap, err
+			return sitemap, InvalidPatternErr
 		}
 
 		patterns[group] = r

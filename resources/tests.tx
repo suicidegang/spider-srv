@@ -1,4 +1,16 @@
 micro query sg.micro.srv.spider Spider.TrackSitemap '{
+    "from": "http://www.motorcycle.com/specs/",
+    "name": "Motorcycle specs #2",
+    "depth": 4,
+    "patterns": {
+        "motorcycle": "${manufacturer:slug}/{type:slug}/{year:num}/{series:slug}/{model:slug}.html",
+        "filtered-list": "${list:slug}/{filter:slug}.html",
+        "list": "${list:slug}.html",
+        "landing": "$"
+    }
+}'
+
+micro query sg.micro.srv.spider Spider.TrackSitemap '{
     "from": "https://www.whistleout.com.mx/CellPhones",
     "name": "Whistleout cellphones #4",
     "depth": 4,

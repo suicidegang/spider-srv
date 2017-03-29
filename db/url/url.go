@@ -6,6 +6,7 @@ import (
 	"gopkg.in/redis.v5"
 
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"log"
 	"net/url"
@@ -98,7 +99,7 @@ func FindFullText(db *gorm.DB, search string) Urls {
 	return urls
 }
 
-func Prepare(db *gorm.DB, r *redis.Client, urlStr, group string, sitemapID uint) (Url, error) {
+func Prepare(db *gorm.DB, r *redis.Client, urlStr, group string, meta map[string]string, sitemapID uint) (Url, error) {
 	if len(urlStr) < 8 {
 		log.Printf("[err] Url::prepare could not parse url: %v", urlStr)
 		return Url{}, errors.New("Invalid url")
@@ -130,13 +131,18 @@ func Prepare(db *gorm.DB, r *redis.Client, urlStr, group string, sitemapID uint)
 		title := doc.Find("title").Text()
 		description := doc.Find("meta[name='description']").AttrOr("content", "")
 
+		data, err := json.Marshal(meta)
+		if err != nil {
+			return Url{}, err
+		}
+
 		ourl = Url{
 			SitemapID:   sql.NullInt64{int64(sitemapID), vsitemap},
 			Url:         simpleUrl,
 			QueryParams: queryParams,
 			Title:       title,
 			Description: description,
-			Meta:        "{}",
+			Meta:        string(data),
 			Group:       group,
 		}
 
