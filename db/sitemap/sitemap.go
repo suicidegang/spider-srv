@@ -18,6 +18,7 @@ type Sitemap struct {
 	Depth    uint64
 	Patterns string `sql:"type:JSONB NOT NULL DEFAULT '{}'::JSONB"`
 	Updating bool
+	Strict   bool
 }
 
 type Pattern struct {
@@ -71,7 +72,7 @@ func (sitemap Sitemap) Create(db *gorm.DB, r *redis.Client) (Sitemap, error) {
 		patterns[pattern.Name] = r
 	}
 
-	w := SitemapRequest{Url: sitemap.EntryUrl, Entry: sitemap.EntryUrl, UniqueParams: false, Depth: 0, Patterns: patterns, SitemapID: sitemap.ID, FinalDepth: sitemap.Depth, DB: db, R: r}
+	w := SitemapRequest{Url: sitemap.EntryUrl, Strict: sitemap.Strict, Entry: sitemap.EntryUrl, UniqueParams: false, Depth: 0, Patterns: patterns, SitemapID: sitemap.ID, FinalDepth: sitemap.Depth, DB: db, R: r}
 
 	// Send the request to the queue
 	Queue <- w

@@ -25,6 +25,7 @@ func (srv *Spider) TrackSitemap(ctx context.Context, req *proto.TrackSitemapRequ
 		Name:     req.Name,
 		EntryUrl: req.From,
 		Depth:    req.Depth,
+		Strict:   req.Strict,
 		Patterns: string(patterns),
 	}
 

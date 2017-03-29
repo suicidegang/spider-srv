@@ -2,12 +2,12 @@ micro query sg.micro.srv.spider Spider.TrackSitemap '{
     "from": "http://www.motorcycle.com/specs/",
     "name": "Motorcycle specs",
     "depth": 4,
+    "strict": true,
     "patterns": [
-        {"name": "motorcycle", "matches": "${manufacturer:slug}/{type:slug}/{year:num}/{series:slug}/{model:slug}.html"},
-        {"name": "motorcycle-section", "matches": "${manufacturer:slug}/{type:slug}/{year:num}/{series:slug}/{model:slug}/{section:slug}.html"},
-        {"name": "filtered-list", "matches": "${list:slug}/{filter:slug}.html"},
-        {"name": "list", "matches": "${list:slug}.html"},
-        {"name": "landing", "matches": "$"}
+        {"name": "motorcycle", "matches": "^{manufacturer:slug}/{type:slug}/{year:num}/{series:slug}/{model:slug}.html"},
+        {"name": "filtered-list", "matches": "^{list:slug}/{filter:slug}.html"},
+        {"name": "list", "matches": "^{list:slug}.html"},
+        {"name": "landing", "matches": "^$"}
     ]
 }'
 

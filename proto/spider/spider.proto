@@ -46,11 +46,11 @@ message TrackSitemapRequest {
 		string name = 1;
 		string matches = 2;
 	}
-
 	string from = 1;
 	uint64 depth = 2;
 	repeated Pattern patterns = 3;
 	string name = 4;
+	bool strict = 5;
 }
 
 message TrackSitemapResponse {

@@ -21,6 +21,7 @@ type SitemapRequest struct {
 	SitemapID    uint
 	FinalDepth   uint64
 	UniqueParams bool
+	Strict       bool
 	DB           *gorm.DB
 	R            *redis.Client
 }
@@ -51,7 +52,7 @@ func (req SitemapRequest) Work(next enqueue) {
 	}
 
 	// Uncategorized urls that match entry point must be processed as site pages.
-	if strings.HasPrefix(req.Url, req.Entry) {
+	if !req.Strict && strings.HasPrefix(req.Url, req.Entry) {
 		req.ProcessPageURL("site", map[string]string{}, next)
 	}
 }
@@ -111,6 +112,7 @@ func (req SitemapRequest) ProcessPageURL(group string, meta map[string]string, n
 				Patterns:   req.Patterns,
 				SitemapID:  req.SitemapID,
 				FinalDepth: req.FinalDepth,
+				Strict:     req.Strict,
 				DB:         req.DB, R: req.R,
 			}
 
@@ -123,7 +125,7 @@ func (req SitemapRequest) ProcessPageURL(group string, meta map[string]string, n
 			}
 
 			// Uncategorized urls that match entry point must be crawled
-			if strings.HasPrefix(lurl.String(), req.Entry) {
+			if !req.Strict && strings.HasPrefix(lurl.String(), req.Entry) {
 
 				// Send the request to the queue
 				next(w)
