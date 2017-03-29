@@ -54,7 +54,7 @@ func (sitemap Sitemap) Create(db *gorm.DB, r *redis.Client) (Sitemap, error) {
 		return sitemap, err
 	}
 
-	regexer := strings.NewReplacer(".", "\\.", "/", "\\/", "?", "\\?", "$", sitemap.EntryUrl)
+	regexer := strings.NewReplacer(".", "\\.", "/", "\\/", "?", "\\?", "^", "^"+sitemap.EntryUrl)
 
 	// Create regex patterns from patterns with bindings
 	for _, pattern := range groups {
