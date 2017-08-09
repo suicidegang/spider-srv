@@ -56,6 +56,11 @@ $ micro query sg.micro.srv.spider Spider.TrackURL '{
 }'
 ```
 
+micro query sg.micro.srv.spider Spider.TrackURL '{
+    "url": "http://www.movilcelular.es/movil/motorola-moto-g5-plus-xt1681-32gb/3207",
+    "group": "movilcelular"
+}'
+
 ### Spider.FetchDataset
 ```shell
 $ micro query sg.micro.srv.spider Spider.FetchDataset '{

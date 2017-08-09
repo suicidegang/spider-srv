@@ -1,0 +1,32 @@
+{
+	"name": {"use": "text", "value": ".promo_area h2", "filters": ["trim-space"]},
+	"model": { "i": 0, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]},
+	"msrp": {"i": 1, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]},
+	"warranty": {"i": 3, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]},
+	"engine_type": {"i": 6, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]},
+	"cylinders": {"i": 7, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]},
+	"engine_stroke": {"i": 8, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]},
+	"cooling": {"i": 9, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]},
+	"valves": {"i": 10, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]},
+	"valves_per_cylinder": {"i": 11, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]},
+	"valves_config": {"i": 12, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]},
+	"compression_ratio": {"i": 13, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]},
+	"starter": {"i": 14, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]},
+	"fuel_requirements": {"i": 15, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]},
+	"fuel_type": {"i": 16, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]},
+	"transmission_type": {"i": 17, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]},
+	"speeds": {"i": 18, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]},
+	"primary_drive": {"i": 19, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]},
+	"front_tire": {"i": 20, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]},
+	"read_tire": {"i": 21, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]},
+	"front_brake": {"i": 22, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]},
+	"read_brake": {"i": 23, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]},
+	"wheel_base": {"i": 24, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]},
+	"fuel_capacity": {"i": 25, "use": "text", "value": ".specs_results table tr td:last-child", "filters": ["trim-space"]}
+}
+
+
+micro query sg.micro.srv.spider Spider.PrepareDatasets '{
+    "selector_id": 1,
+    "group": "motorcycle"
+}'

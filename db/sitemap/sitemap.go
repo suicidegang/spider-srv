@@ -55,6 +55,7 @@ func (sitemap Sitemap) Create(db *gorm.DB, r *redis.Client) (Sitemap, error) {
 		return sitemap, err
 	}
 
+	// Create string replacer to escape stuff that would conflict with regexp
 	regexer := strings.NewReplacer(".", "\\.", "/", "\\/", "?", "\\?", "^", "^"+sitemap.EntryUrl)
 
 	// Create regex patterns from patterns with bindings
@@ -72,7 +73,19 @@ func (sitemap Sitemap) Create(db *gorm.DB, r *redis.Client) (Sitemap, error) {
 		patterns[pattern.Name] = r
 	}
 
-	w := SitemapRequest{Url: sitemap.EntryUrl, Strict: sitemap.Strict, Entry: sitemap.EntryUrl, UniqueParams: false, Depth: 0, Patterns: patterns, SitemapID: sitemap.ID, FinalDepth: sitemap.Depth, DB: db, R: r}
+	// Model a sitemap generation request.
+	w := SitemapRequest{
+		Url:          sitemap.EntryUrl,
+		Strict:       sitemap.Strict,
+		Entry:        sitemap.EntryUrl,
+		UniqueParams: false,
+		Depth:        0,
+		Patterns:     patterns,
+		SitemapID:    sitemap.ID,
+		FinalDepth:   sitemap.Depth,
+		DB:           db,
+		R:            r,
+	}
 
 	// Send the request to the queue
 	Queue <- w

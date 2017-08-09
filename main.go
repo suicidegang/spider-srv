@@ -2,8 +2,6 @@ package main
 
 import (
 	"log"
-	"net/http"
-	_ "net/http/pprof"
 	"time"
 
 	"github.com/micro/cli"
@@ -61,10 +59,6 @@ func main() {
 			// Start the work queue dispatcher
 			sitemap.Dispatcher()
 			dataset.PQueueDispatcher(AsyncWorkers)
-
-			go func() {
-				log.Println(http.ListenAndServe("localhost:6060", nil))
-			}()
 
 			return nil
 		}),

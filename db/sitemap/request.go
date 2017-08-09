@@ -52,7 +52,7 @@ func (req SitemapRequest) Work(next enqueue) {
 	}
 
 	// Uncategorized urls that match entry point must be processed as site pages.
-	if !req.Strict && strings.HasPrefix(req.Url, req.Entry) {
+	if req.Strict == false && strings.HasPrefix(req.Url, req.Entry) {
 		req.ProcessPageURL("site", map[string]string{}, next)
 	}
 }

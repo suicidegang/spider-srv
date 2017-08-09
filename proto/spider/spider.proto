@@ -7,12 +7,6 @@ service Spider {
 	rpc FetchDatasetBy(FetchDatasetByRequest) returns (FetchDatasetByResponse) {}
 	rpc PrepareDatasets(PrepareDatasetsRequest) returns (PrepareDatasetsResponse) {} 
 	rpc FetchPages(FetchPagesRequest) returns (FetchPagesResponse) {}
-	// rpc Update(UpdateRequest) returns (UpdateResponse) {}
-	// rpc Delete(DeleteRequest) returns (DeleteResponse) {}
-	// rpc UpdatePassword(UpdatePasswordRequest) returns (UpdatePasswordResponse) {}
-	// rpc Login(LoginRequest) returns (LoginResponse) {}
-	// rpc Logout(LogoutRequest) returns (LogoutResponse) {}
-	// rpc ReadSession(ReadSessionRequest) returns(ReadSessionResponse) {}
 }
 
 message Url {

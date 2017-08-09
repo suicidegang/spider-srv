@@ -21,7 +21,7 @@ func (srv *Spider) TrackSitemap(ctx context.Context, req *proto.TrackSitemapRequ
 		return errors.InternalServerError("sg.micro.srv.spider.TrackSitemap", err.Error())
 	}
 
-	smap := sitemap.Sitemap{
+	site := sitemap.Sitemap{
 		Name:     req.Name,
 		EntryUrl: req.From,
 		Depth:    req.Depth,
@@ -29,12 +29,12 @@ func (srv *Spider) TrackSitemap(ctx context.Context, req *proto.TrackSitemapRequ
 		Patterns: string(patterns),
 	}
 
-	smap, err = smap.Create(db.Db, db.Redis)
+	site, err = site.Create(db.Db, db.Redis)
 	if err != nil {
 		return errors.InternalServerError("sg.micro.srv.spider.TrackSitemap", err.Error())
 	}
 
-	res.Id = uint64(smap.ID)
+	res.Id = uint64(site.ID)
 	return nil
 }
 
