@@ -46,7 +46,7 @@ func (worker *Worker) Stop() {
 
 func NewWorker() Worker {
 	w := Worker{
-		ID:       uuid.NewV4().String(),
+		ID:       uuid.Must(uuid.NewV4()).String(),
 		Queue:    make(chan SitemapRequest, 500),
 		QuitChan: make(chan bool),
 	}
