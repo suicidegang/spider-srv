@@ -1,6 +1,8 @@
 package url
 
 import (
+	"log"
+
 	"github.com/PuerkitoBio/goquery"
 	"github.com/pquerna/cachecontrol"
 	"gopkg.in/redis.v5"
@@ -32,6 +34,8 @@ func Document(r *redis.Client, urlStr string) (*goquery.Document, error) {
 	var doc *goquery.Document
 
 	if !r.Exists(key).Val() {
+		log.Println("[document] Hashed url", hash, "wasnt found in the cache registry. Crawl from remote.")
+
 		req, err := http.NewRequest("GET", urlStr, nil)
 		if err != nil {
 			return nil, err
@@ -53,7 +57,6 @@ func Document(r *redis.Client, urlStr string) (*goquery.Document, error) {
 
 		reasons, expires, _ := cachecontrol.CachableResponse(req, res, cachecontrol.Options{})
 		expiration := 43200
-
 		if len(reasons) == 0 {
 			t := expires.Unix() - time.Now().Unix()
 

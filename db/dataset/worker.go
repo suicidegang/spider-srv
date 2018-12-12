@@ -13,7 +13,7 @@ type PrepareWorker struct {
 
 func (worker *PrepareWorker) Start() {
 	go func() {
-		log.Printf("Starting pworker %v", worker.ID)
+		log.Printf("Starting dataset worker [pid:%v]", worker.ID)
 
 		for {
 			// Add the worker into workers queue

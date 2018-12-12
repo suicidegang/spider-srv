@@ -34,8 +34,9 @@ func Init() {
 		log.Fatal(err)
 	}
 
+	Db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;`)
 	Db.AutoMigrate(&sitemap.Sitemap{}, &url.Url{}, &selector.Selector{}, &dataset.Dataset{})
-	Db.Model(&url.Url{}).AddUniqueIndex("idx_url_params", "url", "query_params")
+	Db.Model(&url.Url{}).AddUniqueIndex("idx_url_params", "url", "query_params", "sitemap_id")
 
 	// URLs table will need some special queries executed to prepare env.
 	Db.Exec(snippets.PostgresSearchCleanup)

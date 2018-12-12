@@ -11,14 +11,17 @@ import (
 	"strings"
 )
 
+// Sitemap model
 type Sitemap struct {
-	gorm.Model
-	Name     string
-	EntryUrl string
-	Depth    uint64
-	Patterns string `sql:"type:JSONB NOT NULL DEFAULT '{}'::JSONB"`
-	Updating bool
-	Strict   bool
+	gorm.Model `json:"-"`
+	Ref        string `gorm:"type:uuid;unique;default:uuid_generate_v4()"`
+	Name       string
+	EntryURL   string
+	Depth      uint64
+	Patterns   string `sql:"type:JSONB NOT NULL DEFAULT '{}'::JSONB" json:"-"`
+	Updating   bool
+	Strict     bool
+	Done       uint64
 }
 
 type Pattern struct {
@@ -39,9 +42,19 @@ func bnum(input string) string {
 	return numBind.ReplaceAllString(input, `(?P<$1>[[:digit:]]+)`)
 }
 
-func (sitemap Sitemap) Create(db *gorm.DB, r *redis.Client) (Sitemap, error) {
+func FindByID(db *gorm.DB, id int) (Sitemap, error) {
+	var m Sitemap
+	err := db.First(&m, id).Error
+	return m, err
+}
 
-	log.Printf("[sg.micro.srv.spider] Sitemap::create")
+func FindByRef(db *gorm.DB, ref string) (Sitemap, error) {
+	var m Sitemap
+	err := db.Where("ref = ?", ref).First(&m).Error
+	return m, err
+}
+
+func (sitemap Sitemap) Create(db *gorm.DB, r *redis.Client) (Sitemap, error) {
 	sitemap.Updating = true
 
 	if err := db.Create(&sitemap).Error; err != nil {
@@ -56,7 +69,7 @@ func (sitemap Sitemap) Create(db *gorm.DB, r *redis.Client) (Sitemap, error) {
 	}
 
 	// Create string replacer to escape stuff that would conflict with regexp
-	regexer := strings.NewReplacer(".", "\\.", "/", "\\/", "?", "\\?", "^", "^"+sitemap.EntryUrl)
+	regexer := strings.NewReplacer(".", "\\.", "/", "\\/", "?", "\\?", "^", "^"+sitemap.EntryURL)
 
 	// Create regex patterns from patterns with bindings
 	for _, pattern := range groups {
@@ -65,7 +78,6 @@ func (sitemap Sitemap) Create(db *gorm.DB, r *redis.Client) (Sitemap, error) {
 		reg = bnum(reg)
 		log.Printf("%s using %s", pattern.Name, reg)
 		r, err := regexp.Compile(reg)
-
 		if err != nil {
 			return sitemap, InvalidPatternErr
 		}
@@ -74,10 +86,10 @@ func (sitemap Sitemap) Create(db *gorm.DB, r *redis.Client) (Sitemap, error) {
 	}
 
 	// Model a sitemap generation request.
-	w := SitemapRequest{
-		Url:          sitemap.EntryUrl,
+	w := Request{
+		URL:          sitemap.EntryURL,
 		Strict:       sitemap.Strict,
-		Entry:        sitemap.EntryUrl,
+		Entry:        sitemap.EntryURL,
 		UniqueParams: false,
 		Depth:        0,
 		Patterns:     patterns,

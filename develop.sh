@@ -1,0 +1,1 @@
+reflex -R '^(static|vendor)/' -r '\.(go|html)$' -s -- sh -c 'go build -o spider-srv && ./spider-srv --pgsql_url="host=127.0.0.1 user=ed dbname=sitemap_guru sslmode=disable"'

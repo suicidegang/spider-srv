@@ -51,7 +51,7 @@ func (srv *Spider) FetchDatasetBy(ctx context.Context, req *proto.FetchDatasetBy
 func (srv *Spider) PrepareDatasets(ct context.Context, req *proto.PrepareDatasetsRequest, res *proto.PrepareDatasetsResponse) error {
 	log.Printf("Spider::prepareDatasets %+v", req)
 
-	query := db.Db.Where("\"group\" = ?", req.Group)
+	query := db.Db.Where(`"group" = ?`, req.Group)
 
 	// Apply query conditions if any
 	if len(req.Conditions) > 0 {

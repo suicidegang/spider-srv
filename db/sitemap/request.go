@@ -1,6 +1,8 @@
 package sitemap
 
 import (
+	"sync"
+
 	"github.com/PuerkitoBio/goquery"
 	"github.com/jinzhu/gorm"
 	"github.com/suicidegang/spider-srv/db/url"
@@ -12,9 +14,9 @@ import (
 	"strings"
 )
 
-// Sitemap request represents an URL that must
-type SitemapRequest struct {
-	Url          string
+// Request represents an URL that must
+type Request struct {
+	URL          string
 	Entry        string
 	Depth        int
 	Patterns     map[string]*regexp.Regexp
@@ -24,21 +26,23 @@ type SitemapRequest struct {
 	Strict       bool
 	DB           *gorm.DB
 	R            *redis.Client
+	Done         *sync.Map
+	Retries      *sync.Map
 }
 
-type enqueue func(job SitemapRequest)
+type enqueue func(job Request)
 
 // Stuff to be done when worker get to this job.
-func (req SitemapRequest) Work(next enqueue) {
+func (req Request) Work(next enqueue) {
 
 	// Iterate over patterns to see if any of them matches the url & process it.
 	for group, pattern := range req.Patterns {
-		if pattern.MatchString(req.Url) {
+		if pattern.MatchString(req.URL) {
 			params := pattern.SubexpNames()
 			meta := map[string]string{}
 
 			if len(params) > 1 {
-				values := pattern.FindStringSubmatch(req.Url)
+				values := pattern.FindStringSubmatch(req.URL)
 				for i, name := range params {
 					if i > 0 {
 						meta[name] = values[i]
@@ -52,22 +56,21 @@ func (req SitemapRequest) Work(next enqueue) {
 	}
 
 	// Uncategorized urls that match entry point must be processed as site pages.
-	if req.Strict == false && strings.HasPrefix(req.Url, req.Entry) {
+	if req.Strict == false && strings.HasPrefix(req.URL, req.Entry) {
 		req.ProcessPageURL("site", map[string]string{}, next)
 	}
 }
 
-// Process page
-func (req SitemapRequest) ProcessPageURL(group string, meta map[string]string, next enqueue) {
-
-	ourl, err := url.Prepare(req.DB, req.R, req.Url, group, meta, uint(req.SitemapID))
+// ProcessPageURL from current request.
+func (req Request) ProcessPageURL(group string, meta map[string]string, next enqueue) {
+	ourl, err := url.Prepare(req.DB, req.R, req.URL, group, meta, uint(req.SitemapID))
 	if err != nil {
 		req.ThrowError(err)
 		return
 	}
 
 	// Keeps a map of hashes for further O(1) checks
-	SitemapTable.Set(req.Hash(), 1)
+	req.Done.Store(req.Hash(), 1)
 
 	// Retrieve URL's queriable document
 	doc, err := ourl.Document(req.R)
@@ -84,8 +87,8 @@ func (req SitemapRequest) ProcessPageURL(group string, meta map[string]string, n
 		if link, exists := s.Attr("href"); exists && len(link) > 1 {
 
 			// Relative path should be prefixed with base url
-			if link[0:1] == "/" {
-				link = url.FixRelative(link, req.Url)
+			if link[0:1] == "/" || (len(link) > 4 && link[0:4] != "http") {
+				link = url.FixRelative(link, req.URL)
 			}
 
 			lurl, err := urls.Parse(link)
@@ -98,15 +101,15 @@ func (req SitemapRequest) ProcessPageURL(group string, meta map[string]string, n
 				lurl.RawQuery = ""
 			}
 
-			if SitemapTable.Has(url.HashMD5(lurl.String())) {
+			if _, exists := req.Done.Load(url.HashMD5(lurl.String())); exists {
 				return
 			}
 
 			// Keep it kind of protected from other routines...
-			SitemapTable.Set(url.HashMD5(lurl.String()), 1)
+			req.Done.Store(url.HashMD5(lurl.String()), 1)
 
-			w := SitemapRequest{
-				Url:        lurl.String(),
+			w := Request{
+				URL:        lurl.String(),
 				Entry:      req.Entry,
 				Depth:      req.Depth + 1,
 				Patterns:   req.Patterns,
@@ -134,26 +137,24 @@ func (req SitemapRequest) ProcessPageURL(group string, meta map[string]string, n
 	})
 }
 
-func (req SitemapRequest) Hash() string {
-	return url.HashMD5(req.Url)
+func (req Request) Hash() string {
+	return url.HashMD5(req.URL)
 }
 
-func (req SitemapRequest) ThrowError(err error) {
+func (req Request) ThrowError(err error) {
 	n := 0
 	h := req.Hash()
-
-	if SitemapRetries.Has(h) {
-		ns, _ := SitemapRetries.Get(h)
+	if ns, exists := req.Retries.Load(h); exists {
 		n = ns.(int)
 	}
 
 	if n >= 0 {
-		log.Printf("[err] %v/%v: %v", req.Url, req.Depth, err)
+		log.Printf("[err] %v/%v: %v", req.URL, req.Depth, err)
 
 		// Use sitemap table to avoid new retries
-		SitemapTable.Set(h, 1)
+		req.Done.Store(h, 1)
 		return
 	}
 
-	SitemapRetries.Set(h, n+1)
+	req.Retries.Store(h, n+1)
 }

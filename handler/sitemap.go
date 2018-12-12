@@ -23,7 +23,7 @@ func (srv *Spider) TrackSitemap(ctx context.Context, req *proto.TrackSitemapRequ
 
 	site := sitemap.Sitemap{
 		Name:     req.Name,
-		EntryUrl: req.From,
+		EntryURL: req.From,
 		Depth:    req.Depth,
 		Strict:   req.Strict,
 		Patterns: string(patterns),

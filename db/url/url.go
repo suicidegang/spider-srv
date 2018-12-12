@@ -1,11 +1,12 @@
 package url
 
 import (
+	"strings"
+
 	"github.com/PuerkitoBio/goquery"
 	"github.com/jinzhu/gorm"
 	"gopkg.in/redis.v5"
 
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"log"
@@ -14,16 +15,19 @@ import (
 )
 
 type Url struct {
-	gorm.Model
+	gorm.Model `json:"-"`
 
-	SitemapID sql.NullInt64
-
-	Url         string
-	QueryParams string
-	Title       string
-	Description string `gorm:"type:text"`
-	Meta        string `sql:"type:JSONB NOT NULL DEFAULT '{}'::JSONB"`
-	Group       string
+	Ref             string `gorm:"type:uuid;unique;default:uuid_generate_v4()"`
+	SitemapID       int64
+	Url             string
+	QueryParams     string
+	Title           string
+	Description     string `gorm:"type:text"`
+	Meta            string `sql:"type:JSONB NOT NULL DEFAULT '{}'::JSONB"`
+	Group           string
+	ChangeFrequency string
+	Priority        string
+	Enabled         bool
 
 	LastModified *time.Time `gorm:"null"`
 	Expires      *time.Time `gorm:"null"`
@@ -31,7 +35,6 @@ type Url struct {
 
 func (u Url) FullURL() string {
 	url := u.Url
-
 	if len(u.QueryParams) > 0 {
 		url = url + "?" + u.QueryParams
 	}
@@ -39,6 +42,7 @@ func (u Url) FullURL() string {
 	return url
 }
 
+// Hash MD5 from FullURL.
 func (u Url) Hash() string {
 	return HashMD5(u.FullURL())
 }
@@ -64,6 +68,23 @@ func All(db *gorm.DB) Urls {
 	db.Find(&list)
 
 	return list
+}
+
+func FindByID(db *gorm.DB, id uint) (m Url, err error) {
+	err = db.First(&m, id).Error
+	return
+}
+
+func FindBySitemap(db *gorm.DB, sitemapRef string) (ls Urls, err error) {
+	sitemapID := db.Table("spider_sitemaps").Select("id").Where("ref = ?", sitemapRef).Limit(1).QueryExpr()
+	err = db.Where("sitemap_id = (?)", sitemapID).Find(&ls).Error
+	return
+}
+
+func FindByRef(db *gorm.DB, ref string) (Url, error) {
+	var m Url
+	err := db.Where("ref = ?", ref).First(&m).Error
+	return m, err
 }
 
 func FindBy(db *gorm.DB, conditions []string) (Url, error) {
@@ -117,38 +138,37 @@ func Prepare(db *gorm.DB, r *redis.Client, urlStr, group string, meta map[string
 	}
 
 	var ourl Url
-
-	simpleUrl := u.Scheme + "://" + u.Host + u.EscapedPath()
+	simpleURL := u.Scheme + "://" + u.Host + u.EscapedPath()
 	queryParams := u.RawQuery
 
-	if db.Where("url = ? AND query_params = ?", simpleUrl, queryParams).First(&ourl).RecordNotFound() {
+	if db.Where("url = ? AND query_params = ? AND sitemap_id = ?", simpleURL, queryParams, sitemapID).First(&ourl).RecordNotFound() {
 		doc, err := Document(r, urlStr)
 		if err != nil {
 			return Url{}, err
 		}
 
-		vsitemap := sitemapID != 0
-		title := doc.Find("title").Text()
+		title := strings.TrimSpace(doc.Find("title").Text())
 		description := doc.Find("meta[name='description']").AttrOr("content", "")
-
 		data, err := json.Marshal(meta)
 		if err != nil {
 			return Url{}, err
 		}
 
 		ourl = Url{
-			SitemapID:   sql.NullInt64{int64(sitemapID), vsitemap},
-			Url:         simpleUrl,
-			QueryParams: queryParams,
-			Title:       title,
-			Description: description,
-			Meta:        string(data),
-			Group:       group,
+			SitemapID:       int64(sitemapID),
+			Url:             simpleURL,
+			QueryParams:     queryParams,
+			Title:           title,
+			Description:     description,
+			Meta:            string(data),
+			Group:           group,
+			ChangeFrequency: "weekly",
+			Priority:        "0.5",
+			Enabled:         true,
 		}
 
-		db.Create(&ourl)
-
-		return ourl, nil
+		err = db.Create(&ourl).Error
+		return ourl, err
 	}
 
 	return ourl, nil
@@ -169,6 +189,9 @@ func FixRelative(relative, absolute string) string {
 	if err != nil {
 		log.Printf("[err] Url::prepare could not parse url: %v", err.Error())
 		return relative
+	}
+	if relative[0:1] != "/" {
+		relative = "/" + relative
 	}
 
 	return u.Scheme + "://" + u.Host + relative
